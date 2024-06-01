@@ -1,6 +1,6 @@
 package entities
 
-const tbName = "product"
+const tbProduct = "product"
 
 type Product struct {
 	ID          *int     `gorm:"column:id" json:"id"`
@@ -26,9 +26,9 @@ type ProductBatch struct {
 }
 
 func (*Product) TableName() string {
-	return tbName
+	return tbProduct
 }
 
 func (*ProductInsert) TableName() string {
-	return tbName
+	return tbProduct
 }

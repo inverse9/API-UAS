@@ -77,7 +77,7 @@ func (r *Router) NewRouter() http.Handler {
 			"shop.name AS shopName",
 		)
 
-		var data []entities.Product
+		var data entities.Product
 
 		q.Find(&data)
 		c.JSON(200, gin.H{
@@ -108,28 +108,6 @@ func (r *Router) NewRouter() http.Handler {
 			"result": &input,
 		})
 	})
-
-	//r.gin.POST("/products/batch", func(c *gin.Context) {
-	// 	input := &entities.ProductBatch{}
-	// 	if err := c.ShouldBindJSON(&input); err != nil {
-	// 		e := err.Error()
-	// 		c.JSON(500, gin.H{
-	// 			"status":     false,
-	// 			"errMessage": &e,
-	// 		})
-	// 		return
-	// 	}
-
-	// 	app := core.NewApp()
-	// 	db := app.Mysql
-
-	// 	db.Debug().Create(&input.Data)
-
-	// 	c.JSON(200, gin.H{
-	// 		"status": true,
-	// 		"result": &input.Data,
-	// 	})
-	// })
 
 	r.gin.PUT("/products/:id", func(c *gin.Context) {
 		id, _ := strconv.Atoi(c.Param("id"))
@@ -203,5 +181,129 @@ func (r *Router) NewRouter() http.Handler {
 		})
 	})
 
+
+
+
+
+
+	r.gin.GET("/users", func(c *gin.Context) {
+		app := core.NewApp()
+		db := app.Mysql
+
+		q := db.Debug().Select("id,name,created_at")
+
+		var data []entities.User
+
+		q.Find(&data)
+		c.JSON(200, gin.H{
+			"status": true,
+			"data":   &data,
+		})
+	})
+
+	r.gin.GET("/users/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id")) 
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		q := db.Debug().
+		Where("user.id = ?", &id).Select("*")
+
+		var data entities.User
+
+		q.Find(&data)
+		c.JSON(200, gin.H{
+			"status": true,
+			"data":   &data,
+		})
+	})
+
+	r.gin.POST("/users", func(c *gin.Context) {
+		input := &entities.UserInsert{}
+		if err := c.ShouldBindJSON(&input); err != nil {
+
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		db.Debug().Create(&input)
+
+		c.JSON(200, gin.H{
+			"status": true,
+			"result": &input,
+		})
+	})
+
+	r.gin.PUT("/users/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id"))
+
+		input := &entities.UserInsert{}
+		if err := c.ShouldBindJSON(&input); err != nil {
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		var entity entities.UserInsert
+		if err := db.Where("id = ?", id).First(&entity).Error; err != nil {
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		
+		updateFields := make(map[string]interface{})
+		if input.Name != nil {
+			updateFields["name"] = input.Name
+		}
+		if input.Password != nil {
+			updateFields["password"] = input.Password
+		}
+		
+		
+		if err := db.Model(&entity).Updates(updateFields).Error; err != nil {
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"status": true,
+			"result": &entity,
+		})
+	})
+
+	r.gin.DELETE("/users/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id")) 
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		db.Delete(&entities.User{}, id)
+
+		c.JSON(200, gin.H{
+			"status": true,
+		})
+	})
 	return r.gin
 }
