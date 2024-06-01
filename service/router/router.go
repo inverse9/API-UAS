@@ -342,7 +342,7 @@ func (r *Router) NewRouter() http.Handler {
 		db := app.Mysql
 
 		q := db.Debug().
-		Joins("LEFT JOIN user ON shop.id = user.id").
+		Joins("LEFT JOIN user ON shop.user_id = user.id").
 		Select(
 			"shop.id",
 			"shop.name",
@@ -368,7 +368,7 @@ func (r *Router) NewRouter() http.Handler {
 		db := app.Mysql
 
 		q := db.Debug().
-		Joins("LEFT JOIN user ON shop.id = user.id").
+		Joins("LEFT JOIN user ON shop.user_id = user.id").
 		Where("shop.id = ?", &id).
 		Select(
 			"shop.id",
@@ -474,6 +474,130 @@ func (r *Router) NewRouter() http.Handler {
 		db := app.Mysql
 
 		db.Delete(&entities.Shop{}, id)
+
+		c.JSON(200, gin.H{
+			"status": true,
+		})
+	})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	r.gin.GET("/transactions", func(c *gin.Context) {
+		app := core.NewApp()
+		db := app.Mysql
+
+		q := db.Debug().
+		Joins("LEFT JOIN product ON transaction.product_id = product.id").
+		Joins("LEFT JOIN user ON transaction.user_id = user.id").
+		Select(
+			"transaction.id",
+			"transaction.address",
+			"transaction.product_id",
+			"product.name as ProductName",
+			"transaction.user_id",
+			"user.name AS userName",
+			"transaction.created_at",
+		)
+
+		var data []entities.Transaction
+
+		q.Find(&data)
+		c.JSON(200, gin.H{
+			"status": true,
+			"data":   &data,
+		})
+	})
+
+	r.gin.GET("/transactions/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id")) 
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		q := db.Debug().
+		Joins("LEFT JOIN product ON transaction.product_id = product.id").
+		Joins("LEFT JOIN user ON transaction.user_id = user.id").
+		Where("shop.id = ?", &id).
+
+		Select(
+			"transaction.id",
+			"transaction.address",
+			"transaction.product_id",
+			"product.name as ProductName",
+			"transaction.user_id",
+			"user.name AS userName",
+			"transaction.created_at",
+		)
+
+		var data entities.Transaction
+
+		q.Find(&data)
+		c.JSON(200, gin.H{
+			"status": true,
+			"data":   &data,
+		})
+	})
+
+	r.gin.POST("/transactions", func(c *gin.Context) {
+		input := &entities.TransactionInsert{}
+		if err := c.ShouldBindJSON(&input); err != nil {
+
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		db.Debug().Create(&input)
+
+		c.JSON(200, gin.H{
+			"status": true,
+			"result": &input,
+		})
+	})
+
+	
+
+	r.gin.DELETE("/transactions/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id")) 
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		db.Delete(&entities.Transaction{}, id)
 
 		c.JSON(200, gin.H{
 			"status": true,
