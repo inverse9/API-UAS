@@ -201,14 +201,21 @@ func (r *Router) NewRouter() http.Handler {
 		})
 	})
 
-	r.gin.GET("/users/:id", func(c *gin.Context) {
-		id, _ := strconv.Atoi(c.Param("id")) 
+	r.gin.GET("/users/:name/:password", func(c *gin.Context) {
+    name := c.Param("name")
+    password := c.Param("password")
 
 		app := core.NewApp()
 		db := app.Mysql
 
-		q := db.Debug().
-		Where("user.id = ?", &id).Select("*")
+		q := db.Debug().Joins("RIGHT JOIN shop ON user.id = shop.user_id").
+		Where("user.name = ? AND user.password = ?", name, password).
+		Select(
+			"user.id",
+			"user.name",
+			"user.created_at",
+			"shop.id as shopId",
+		)
 
 		var data entities.User
 
@@ -546,19 +553,20 @@ func (r *Router) NewRouter() http.Handler {
 		q := db.Debug().
 		Joins("LEFT JOIN product ON transaction.product_id = product.id").
 		Joins("LEFT JOIN user ON transaction.user_id = user.id").
-		Where("shop.id = ?", &id).
+		Where("transaction.user_id = ?", &id).
 		Select(
 			"transaction.id",
 			"transaction.address",
 			"transaction.product_id",
 			"transaction.amount",
-			"product.name as ProductName",
+			"product.name as productName",
+			"product.image as productImage",
 			"transaction.user_id",
 			"user.name AS userName",
 			"transaction.created_at",
 		)
 
-		var data entities.Transaction
+		var data []entities.Transaction
 
 		q.Find(&data)
 		c.JSON(200, gin.H{
@@ -670,7 +678,6 @@ func (r *Router) NewRouter() http.Handler {
 		db := app.Mysql
 
 		q := db.Debug().
-
 		Joins("LEFT JOIN product ON cart.product_id = product.id").
 		Joins("LEFT JOIN user ON cart.user_id = user.id").
 				Where("cart.user_id = ?", &id).
@@ -776,7 +783,11 @@ func (r *Router) NewRouter() http.Handler {
 		app := core.NewApp()
 		db := app.Mysql
 
-		db.Delete(&entities.Cart{}, id)
+		result := db.Where("user_id = ?", id).Delete(&entities.Cart{})
+    if result.Error != nil {
+        c.JSON(500, gin.H{"error": "Failed to delete cart items"})
+        return
+    }
 
 		c.JSON(200, gin.H{
 			"status": true,
