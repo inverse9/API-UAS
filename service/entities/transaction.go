@@ -10,6 +10,7 @@ type Transaction struct {
 	ProductName *string `gorm:"column:productName" json:"productName"`
 	UserId      *int    `gorm:"column:user_id" json:"user_id"`
 	UserName    *string `gorm:"column:userName" json:"userName"`
+	Amount      *int    `gorm:"column:amount" json:"amount"`
 }
 
 type TransactionInsert struct {
@@ -17,6 +18,7 @@ type TransactionInsert struct {
 	Address   *string `gorm:"column:address" json:"address"`
 	ProductId *string `gorm:"column:product_id" json:"product_id"`
 	UserId    *int    `gorm:"column:user_id" json:"user_id"`
+	Amount    *int    `gorm:"column:amount" json:"amount"`
 }
 
 func (*Transaction) TableName() string {

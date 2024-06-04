@@ -521,6 +521,7 @@ func (r *Router) NewRouter() http.Handler {
 			"transaction.id",
 			"transaction.address",
 			"transaction.product_id",
+			"transaction.amount",
 			"product.name as ProductName",
 			"transaction.user_id",
 			"user.name AS userName",
@@ -550,6 +551,7 @@ func (r *Router) NewRouter() http.Handler {
 			"transaction.id",
 			"transaction.address",
 			"transaction.product_id",
+			"transaction.amount",
 			"product.name as ProductName",
 			"transaction.user_id",
 			"user.name AS userName",
@@ -588,6 +590,31 @@ func (r *Router) NewRouter() http.Handler {
 		})
 	})
 
+
+	r.gin.POST("/transaction-batch", func(c *gin.Context) {
+		// menerima input dari payload API
+		input := &entities.TransactionBatch{}
+		if err := c.ShouldBindJSON(&input); err != nil {
+			// mengembalikan respon gagal
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		db.Debug().Create(&input.Data)
+
+		// mengembalikan respon berhasil
+		c.JSON(200, gin.H{
+			"status": true,
+			"result": &input.Data,
+		})
+	})
 	
 
 	r.gin.DELETE("/transactions/:id", func(c *gin.Context) {
