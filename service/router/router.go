@@ -546,7 +546,6 @@ func (r *Router) NewRouter() http.Handler {
 		Joins("LEFT JOIN product ON transaction.product_id = product.id").
 		Joins("LEFT JOIN user ON transaction.user_id = user.id").
 		Where("shop.id = ?", &id).
-
 		Select(
 			"transaction.id",
 			"transaction.address",
@@ -603,5 +602,200 @@ func (r *Router) NewRouter() http.Handler {
 			"status": true,
 		})
 	})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	r.gin.GET("/cart", func(c *gin.Context) {
+		app := core.NewApp()
+		db := app.Mysql
+
+		q := db.Debug().
+		Joins("LEFT JOIN product ON cart.product_id = product.id").
+		Joins("LEFT JOIN user ON cart.user_id = user.id").
+		Select(
+			"cart.id",
+			"cart.amount",
+			"cart.product_id",
+			"product.name as ProductName",
+			"product.price",
+			"cart.user_id",
+			"cart.name AS UserName",
+		)
+
+		var data []entities.Cart
+
+		q.Find(&data)
+		c.JSON(200, gin.H{
+			"status": true,
+			"data":   &data,
+		})
+	})
+
+	r.gin.GET("/cart", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Query("userId"))
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		q := db.Debug().
+
+		Joins("LEFT JOIN product ON cart.product_id = product.id").
+		Joins("LEFT JOIN user ON cart.user_id = user.id").
+				Where("cart.user_id = ?", &id).
+		Select(
+			"cart.id",
+			"cart.amount",
+			"cart.product_id",
+			"product.name as ProductName",
+			"product.price",
+			"cart.user_id",
+			"cart.name AS UserName",
+		)
+
+		var data entities.Cart
+
+		q.Find(&data)
+		c.JSON(200, gin.H{
+			"status": true,
+			"data":   &data,
+		})
+	})
+
+	r.gin.POST("/cart", func(c *gin.Context) {
+		input := &entities.CartInsert{}
+		if err := c.ShouldBindJSON(&input); err != nil {
+
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		db.Debug().Create(&input)
+
+		c.JSON(200, gin.H{
+			"status": true,
+			"result": &input,
+		})
+	})
+
+	r.gin.PUT("/cart/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id"))
+
+		input := &entities.CartInsert{}
+		if err := c.ShouldBindJSON(&input); err != nil {
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		var entity entities.CartInsert
+		if err := db.Where("id = ?", id).First(&entity).Error; err != nil {
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		
+		updateFields := make(map[string]interface{})
+
+		if input.UserId != nil {
+			updateFields["user_id"] = input.UserId
+		}
+		if input.UserId != nil {
+			updateFields["product_id"] = input.UserId
+		}
+		if input.UserId != nil {
+			updateFields["amount"] = input.UserId
+		}
+		if err := db.Model(&entity).Updates(updateFields).Error; err != nil {
+			e := err.Error()
+			c.JSON(500, gin.H{
+				"status":     false,
+				"errMessage": &e,
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"status": true,
+			"result": &entity,
+		})
+	})
+
+	r.gin.DELETE("/cart/:id", func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id")) 
+
+		app := core.NewApp()
+		db := app.Mysql
+
+		db.Delete(&entities.Cart{}, id)
+
+		c.JSON(200, gin.H{
+			"status": true,
+		})
+	})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	return r.gin
 }

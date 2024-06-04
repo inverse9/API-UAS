@@ -23,6 +23,10 @@ func (*Transaction) TableName() string {
 	return tbTransaction
 }
 
+type TransactionBatch struct {
+	Data *[]TransactionInsert
+}
+
 func (*TransactionInsert) TableName() string {
 	return tbTransaction
 }
