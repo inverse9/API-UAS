@@ -637,33 +637,7 @@ func (r *Router) NewRouter() http.Handler {
 
 
 	r.gin.GET("/cart", func(c *gin.Context) {
-		app := core.NewApp()
-		db := app.Mysql
-
-		q := db.Debug().
-		Joins("LEFT JOIN product ON cart.product_id = product.id").
-		Joins("LEFT JOIN user ON cart.user_id = user.id").
-		Select(
-			"cart.id",
-			"cart.amount",
-			"cart.product_id",
-			"product.name as ProductName",
-			"product.price",
-			"cart.user_id",
-			"cart.name AS UserName",
-		)
-
-		var data []entities.Cart
-
-		q.Find(&data)
-		c.JSON(200, gin.H{
-			"status": true,
-			"data":   &data,
-		})
-	})
-
-	r.gin.GET("/cart", func(c *gin.Context) {
-		id, _ := strconv.Atoi(c.Query("userId"))
+		id, _ := strconv.Atoi(c.Query("user_id"))
 
 		app := core.NewApp()
 		db := app.Mysql
@@ -677,13 +651,14 @@ func (r *Router) NewRouter() http.Handler {
 			"cart.id",
 			"cart.amount",
 			"cart.product_id",
-			"product.name as ProductName",
-			"product.price",
+			"product.name as productName",
+			"product.image as productImage",
+			"product.price as productPrice" ,
 			"cart.user_id",
-			"cart.name AS UserName",
+			"user.name AS userName",
 		)
 
-		var data entities.Cart
+		var data []entities.Cart
 
 		q.Find(&data)
 		c.JSON(200, gin.H{
