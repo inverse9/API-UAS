@@ -208,7 +208,7 @@ func (r *Router) NewRouter() http.Handler {
 		app := core.NewApp()
 		db := app.Mysql
 
-		q := db.Debug().Joins("RIGHT JOIN shop ON user.id = shop.user_id").
+		q := db.Debug().Joins("LEFT JOIN shop ON user.id = shop.user_id").
 		Where("user.name = ? AND user.password = ?", name, password).
 		Select(
 			"user.id",
